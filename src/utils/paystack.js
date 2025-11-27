@@ -1,4 +1,3 @@
-
 /**
  * Paystack Payment Integration for Vauntico
  * 
@@ -309,75 +308,32 @@ export const checkoutWorkshopKit = async (userEmail = '', paymentType = 'one_tim
  * @param {string} tier - Product tier
  * @param {string} billingCycle - Billing cycle (optional)
  */
-const verifyPayment = async (reference, tier, billingCycle = null) => {
+const verifyPayment = async (reference) => {
   try {
-    // Call your backend to verify payment
-    const response = await fetch('/api/verify-paystack-payment', {
+    const response = await fetch('/api/verify-payment', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ reference })
-    })
+      body: JSON.stringify({ reference }),
+    });
 
-    const data = await response.json()
+    const data = await response.json();
 
     if (data.status === 'success') {
-      // Update local state
-      if (tier === 'workshop_kit') {
-        localStorage.setItem('vauntico_workshop_kit', 'true')
-        alert('🎉 Workshop Kit purchased successfully!')
-      } else {
-        // Creator Pass subscription
-        localStorage.setItem('vauntico_creator_pass', 'true')
-        localStorage.setItem('vauntico_creator_pass_tier', tier)
-        
-        // Track success
-        const prices = {
-          starter: billingCycle === 'monthly' ? 299 : 2990,
-          pro: billingCycle === 'monthly' ? 999 : 9990,
-          legacy: billingCycle === 'monthly' ? 2999 : 29990
-        }
-        
-        trackSubscriptionSuccess(tier, billingCycle, prices[tier], 'ZAR')
-        
-        alert(`🎉 Welcome to Creator Pass ${tier.toUpperCase()}! Your covenant has been sealed.`)
-      }
-
-      // Reload to update UI
-      setTimeout(() => {
-        window.location.href = '/dashboard'
-      }, 2000)
+      console.log('Payment verified successfully:', data);
+      return data;
     } else {
-      alert('❌ Payment verification failed. Please contact support.')
+      console.error('Payment verification failed:', data.message);
+      alert('❌ Payment verification failed. Please contact support.');
+      return null;
     }
   } catch (error) {
-    console.error('Verification error:', error)
-    
-    // Fallback: Update local state anyway (for testing)
-    if (import.meta.env.DEV) {
-      console.log('🧪 DEV MODE: Updating local state without verification')
-      
-      if (tier === 'workshop_kit') {
-        localStorage.setItem('vauntico_workshop_kit', 'true')
-      } else {
-        localStorage.setItem('vauntico_creator_pass', 'true')
-        localStorage.setItem('vauntico_creator_pass_tier', tier)
-        
-        const prices = {
-          starter: billingCycle === 'monthly' ? 299 : 2990,
-          pro: billingCycle === 'monthly' ? 999 : 9990,
-          legacy: billingCycle === 'monthly' ? 2999 : 29990
-        }
-        
-        trackSubscriptionSuccess(tier, billingCycle, prices[tier], 'ZAR')
-      }
-      
-      alert('🧪 TEST MODE: Payment simulated successfully!')
-      setTimeout(() => window.location.reload(), 1000)
-    }
+    console.error('Error during payment verification:', error);
+    alert('❌ An error occurred while verifying payment. Please try again.');
+    return null;
   }
-}
+};
 
 // ============================================================================
 // SUBSCRIPTION MANAGEMENT
