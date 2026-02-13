@@ -2,7 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Zap, Activity, CheckCircle } from 'lucide-react';
 
 const TrustScoreDashboard = () => {
-  const [metrics, setMetrics] = useState({ accuracy_rate: 100, total: 0 });
+  // State for live metrics from the Phantom Maintainer
+  const [metrics, setMetrics] = useState({ accuracy_rate: 0, total: 0 });
+  const [loading, setLoading] = useState(true);
+
+  // Data Bridge: Pulling from vauntico-server-personal
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        // REPLACE with your actual Vercel/Railway backend URL
+        const response = await fetch('https://YOUR_BACKEND_URL/api/metrics', {
+          headers: {
+            'x-service-key': 'YOUR_SERVICE_API_KEY', // Authenticated Admin Access
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        setMetrics({
+          accuracy_rate: data.accuracy_rate || 0,
+          total: data.total || 0
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error("🛡️ Phantom Data Bridge Error:", error);
+        // Fallback to zeros rather than crashing
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+    // Auto-refresh every 5 minutes to maintain the "Permanent Green" state
+    const interval = setInterval(fetchMetrics, 300000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white font-sans">
+        <Activity className="text-blue-500 animate-spin mb-4" size={48} />
+        <p className="tracking-widest uppercase text-xs font-bold text-slate-400">Initializing Phantom Data Bridge...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-slate-900 text-white min-h-screen font-sans">
