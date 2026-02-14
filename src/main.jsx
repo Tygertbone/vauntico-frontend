@@ -6,8 +6,10 @@ import App from './App'
 import './index.css'
 import { initPerformanceMonitoring } from './utils/performance'
 
-// Initialize Vercel Analytics safely
-if (typeof window !== 'undefined') {
+// Standard production check that satisfies TypeScript
+const isProd = process.env.NODE_ENV === 'production' || (import.meta as any).env?.PROD;
+
+if (isProd) {
   inject();
 }
 
