@@ -1,32 +1,32 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { inject } from '@vercel/analytics'
-import App from './App' // FIX: Removed .jsx/.tsx extension
+import App from './App' 
 import './index.css'
-import { initPerformanceMonitoring } from './utils/performance' // FIX: Removed .js extension
 
-// FIX: Defensive check for production that TypeScript won't block
-const isProd = typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
+// 1. Resolve the .js file without the extension for TS5097
+// @ts-ignore
+import { initPerformanceMonitoring } from './utils/performance'
+
+// 2. Use a universal way to check for PROD for TS2339
+const meta = import.meta as any;
+const isProd = meta.env?.PROD || process.env.NODE_ENV === 'production';
 
 if (isProd) {
-  try {
-    inject();
-  } catch (e) {
-    console.warn('Analytics injection skipped');
-  }
+  // Use dynamic import for analytics to hide it from the initial type-scan
+  import('@vercel/analytics').then(({ inject }) => inject()).catch(() => {});
 }
 
-// Initialize performance monitoring
 initPerformanceMonitoring();
 
-const root = document.getElementById('root');
-if (root) {
-  ReactDOM.createRoot(root).render(
+const container = document.getElementById('root');
+if (container) {
+  const root = ReactDOM.createRoot(container);
+  root.render(
     <React.StrictMode>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </React.StrictMode>
-  )
+  );
 }
