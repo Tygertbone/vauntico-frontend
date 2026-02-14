@@ -1,14 +1,27 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
+import { BrowserRouter } from 'react-router-dom'
+import { inject } from '@vercel/analytics'
+import App from './App' 
 import './index.css'
-import { initPerformanceMonitoring } from './utils/performance.js'
+import { initPerformanceMonitoring } from './utils/performance'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+// Initialize Vercel Analytics safely
+if (typeof window !== 'undefined') {
+  inject();
+}
 
 // Initialize performance monitoring
-initPerformanceMonitoring()
+initPerformanceMonitoring();
+
+const rootElement = document.getElementById('root');
+
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>
+  )
+}
